@@ -34,6 +34,8 @@ summary(test)
 install.packages("rpart")
 install.packages("tidymodels")
 install.packages("rpart.plot")
+install.packages("Boruta")
+install.packages("randomForest")
 ```
 
 
@@ -42,9 +44,27 @@ install.packages("rpart.plot")
 library(tidymodels)
 library(rpart)
 library(rpart.plot)
-
+library(yardstick)
+library(Boruta)
+library(randomForest)
 ```
 
+```{r}
+# Variable Selection
+
+set.seed(42) # For reproducibility
+
+# Run Boruta on the training dataset
+boruta_results <- Boruta(Payment.Status ~ ., data = train, doTrace = 2)
+
+# Print the results
+print(boruta_results)
+
+# Plot Boruta results
+plot(boruta_results, las = 2, main = "Boruta Feature Importance")
+
+
+```
 
 ```{r}
 #create decision tree model
@@ -78,12 +98,23 @@ pred_results <- data.frame(predict(tree_wf, test))
 colnames(pred_results) <- c("test_pred_tree")
 test <- cbind(test, pred_results)
 test
+
 ```
 
+```{r}
+# Evaluation Metrics
+
+# Confusion matrix
+conf_mat(test, truth = Payment.Status, estimate = test_pred_tree)
+
+# Accuracy
+accuracy(test, truth = Payment.Status, estimate = test_pred_tree)
+```
 ```{r, fig.width = 15, fig.height=7}
 #plot decision tree
 fit <- rpart(Payment.Status~ ., data=train, method = "class")
-rpart.plot(fit, tweak = 1.5)
+rpart.plot(fit, type = 2, extra = 104, fallen.leaves = TRUE, tweak = 1.2)
+
 ```
 
 
